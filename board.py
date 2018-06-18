@@ -26,6 +26,29 @@ def find_corner(point, ref):
     return left_down, left_up, right_down, right_up
 
 
+def delete_small_component(img):
+    # find all your connected components (white blobs in your image)
+    nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(
+        img, connectivity=8)
+    # connectedComponentswithStats yields every seperated component with information on each of them, such as size
+    # the following part is just taking out the background which is also considered a component, but most of the time we don't want that.
+    sizes = stats[1:, -1]
+    nb_components = nb_components - 1
+
+    # minimum size of particles we want to keep (number of pixels)
+    # here, it's a fixed value, but you can set it as you want, eg the mean of the sizes or whatever
+    min_size = 150
+
+    # your answer image
+    img2 = np.zeros((output.shape))
+    # for every component in the image, you keep it only if it's above min_size
+    for i in range(0, nb_components):
+        if sizes[i] >= min_size:
+            img2[output == i + 1] = 255
+
+    return img2
+
+
 def auto_correction(figure_name, more_info=False):
     img = cv2.imread(figure_name)
     print('Image shape:', img.shape)
@@ -33,8 +56,30 @@ def auto_correction(figure_name, more_info=False):
     size = min(w, h)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+    # gray = cv2.GaussianBlur(gray, (3, 3), 0)
+    # _, gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # plt.imshow(gray)
+    # plt.show()
+
     edges = cv2.Canny(gray, 45, 200)
     edges_bgr = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+
+    img2 = delete_small_component(edges)
+
+    edges3 = img2.astype(int)
+
+    if more_info:
+        plt.subplot(221)
+        plt.imshow(edges)
+        plt.subplot(222)
+        plt.imshow(edges3)
+        plt.subplot(223)
+        plt.imshow(edges - edges3)
+        plt.show()
+
+    # for i in range(w):
+    #     for j in range(h):
+    #         edges[i, j] = edges3[i, j]
 
     lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 90,
                             maxLineGap=10, minLineLength=int(0.1 * size))
@@ -81,6 +126,8 @@ def auto_correction(figure_name, more_info=False):
         x.append(p[0])
         y.append(p[1])
         point.append(p)
+        # if more_info:
+        #     cv2.circle(img, (p[0], p[1]), 5, (0, 255, 0), -1)
 
     ref = [np.min(x), np.max(x), np.min(y), np.max(y)]
     ld, lu, rd, ru = find_corner(point, ref)
@@ -117,8 +164,12 @@ def auto_correction(figure_name, more_info=False):
 
 
 def main():
-    figure_name = './image/board1.jpg'
+    figure_name = './board3.jpg'
     auto_correction(figure_name, more_info=True)
+    # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # _, img = cv2.threshold(img, 90, 255, cv2.THRESH_BINARY)
+    # plt.imshow(img, cmap='gray')
+    # plt.show()
 
 
 if __name__ == '__main__':
