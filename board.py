@@ -164,7 +164,7 @@ def auto_correction(figure_name, more_info=False):
 
 
 def main():
-    figure_name = './board3.jpg'
+    figure_name = './TestImage02.jpg'
     auto_correction(figure_name, more_info=True)
     # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # _, img = cv2.threshold(img, 90, 255, cv2.THRESH_BINARY)
