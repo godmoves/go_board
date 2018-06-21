@@ -1,19 +1,24 @@
 import cv2
 import matplotlib.pyplot as plt
 
-from detect_line import *
+from detect_line import getBoardIntersections
 from utils import imshow
+from detect_board import getWarpedImg
 
-
-img = cv2.imread('./image/board2.jpg')
+img = cv2.imread('./image/board8.jpg')
 print('Image size:', img.shape)
 
-imshow(img)
+imshow(img, 'original image')
 
-paintedImg = img.copy()
+warpedImg = getWarpedImg(img)
 
-paintedImg, intersectedPoints = getBoardIntersections(img, 255, 19, paintedImg)
+imshow(warpedImg, 'warpedImg')
 
-imshow(paintedImg)
+paintedImg, intersectedPoints = getBoardIntersections(warpedImg, 255, 19)
+
+imshow(paintedImg, 'paintedImg')
+
+if len(intersectedPoints) > 4:
+    pass
 
 plt.show()

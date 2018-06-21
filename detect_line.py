@@ -22,10 +22,8 @@ class PartitionOperator():
 def partition(points, Oper):
     clusterSize = 0
     clusterNum = []
-    pos_now = None
+    pos_now = points[0]
     for p in points:
-        if pos_now is None:
-            pos_now = p
         if Oper.compare(pos_now, p):
             clusterNum.append(clusterSize)
         else:
@@ -61,7 +59,7 @@ def createLinefromValue(circles, line_type, board_size, imgheight, imgwidth):
         for k in clusterNum:
             if k == i:
                 num_of_one_cluster += 1
-            if num_of_one_cluster > 3:
+            if num_of_one_cluster > 3:  # tune this to find more lines
                 cluster_we_need.append(i)
                 new_clusterSize += 1
                 break
@@ -99,7 +97,7 @@ def getBetterDetectionImage(houghImg, createFakeLines, board_size):
 
     houghCircleImg = cv2.dilate(houghCircleImg, element_dilate)
 
-    imshow(houghCircleImg, 'houghCircleImg')
+    # imshow(houghCircleImg, 'houghCircleImg')
 
     if board_size == 0:
         min_radius = 20
@@ -118,8 +116,8 @@ def getBetterDetectionImage(houghImg, createFakeLines, board_size):
         cv2.circle(houghImg, (i[0], i[1]), int(i[2] + 5), 0, -1, 8, 0)
         cv2.circle(houghCircleImg2, (i[0], i[1]), int(i[2] + 5), (0, 0, 255), -1, 8, 0)
 
-    imshow(houghImg, 'houghImg')
-    imshow(houghCircleImg2, 'houghCircleImg2')
+    # imshow(houghImg, 'houghImg')
+    # imshow(houghCircleImg2, 'houghCircleImg2')
 
     if createFakeLines:
         circles_x = []
@@ -142,13 +140,13 @@ def getBetterDetectionImage(houghImg, createFakeLines, board_size):
         houghImg2 = houghImg.copy()
         houghImg2 = cv2.cvtColor(houghImg2, cv2.COLOR_GRAY2RGB)
         for i, l in enumerate(newLines):
-            print('line {} from ({:.2f},{:.2f}) to ({:.2f},{:.2f})'.format(
-                i, l[0], l[1], l[2], l[3]))
+            # print('line {} from ({:.2f},{:.2f}) to ({:.2f},{:.2f})'.format(
+            #     i, l[0], l[1], l[2], l[3]))
             cv2.line(houghImg, (l[0], l[1]), (l[2], l[3]), 255, 1, 8)
             cv2.line(houghImg2, (l[0], l[1]), (l[2], l[3]), (0, 0, 255), 1, 8)
 
-    imshow(houghImg, 'hough test')
-    imshow(houghImg2, 'hough2 test')
+    # imshow(houghImg, 'hough test')
+    # imshow(houghImg2, 'hough2 test')
 
     return houghImg
 
@@ -288,7 +286,7 @@ def intersection(h, v, imgheight, imgwidth):
     return True, r
 
 
-def getBoardIntersections(warpedImg, thresholdValue, board_size, paintedImg):
+def getBoardIntersections(warpedImg, thresholdValue, board_size):
     imgheight = warpedImg.shape[0]
     imgwidth = warpedImg.shape[1]
 
@@ -307,16 +305,16 @@ def getBoardIntersections(warpedImg, thresholdValue, board_size, paintedImg):
 
     thresholdImg = getBetterDetectionImage(thresholdImg, True, board_size)
 
-    imshow(thresholdImg, 'thresholdImg for HoughLinesP')
+    # imshow(thresholdImg, 'thresholdImg for HoughLinesP')
 
-    lines = cv2.HoughLinesP(thresholdImg, 1, np.pi / 180, 100, minLineLength=30, maxLineGap=3)
+    lines = cv2.HoughLinesP(thresholdImg, 1, np.pi / 180, 100, minLineLength=30, maxLineGap=10)
     lines = lines[:, 0, :]
 
     houghImg = warpedImg.copy()
     for x1, y1, x2, y2 in lines:
         cv2.line(houghImg, (x1, y1), (x2, y2), (0, 0, 255), 1, 8)
 
-    imshow(houghImg, 'HoughLines Image')
+    # imshow(houghImg, 'HoughLines Image')
 
     hlines, vlines = groupIntersectionLines(lines, imgheight, imgwidth)
 
@@ -334,6 +332,7 @@ def getBoardIntersections(warpedImg, thresholdValue, board_size, paintedImg):
 
     newLines = new_hlines + new_vlines
 
+    paintedImg = warpedImg.copy()
     for l in newLines:
         cv2.line(paintedImg, (int(l[0]), int(l[1])), (int(l[2]), int(l[3])), (0, 0, 255), 1, 8)
 
@@ -343,5 +342,7 @@ def getBoardIntersections(warpedImg, thresholdValue, board_size, paintedImg):
         x2 = int(p[0] + 1)
         y2 = int(p[1] + 1)
         cv2.rectangle(paintedImg, (x1, y1), (x2, y2), (0, 255, 0), 2, 8, 0)
+
+    print('{} lines, {} intersection points'.format(len(newLines), len(intersectionPonits)))
 
     return paintedImg, intersectionPonits

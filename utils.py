@@ -11,4 +11,4 @@ def imshow(img, title='Image'):
     else:
         plt.imshow(img, cmap='gray')
         # plt,imshow(cv2.cvtColor(img, cv2.COLOR_GRAY2RGB))
-    # plt.show()
+    plt.show()
